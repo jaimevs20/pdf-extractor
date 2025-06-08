@@ -33,11 +33,15 @@ public class PdfExtractorController {
 	@PostMapping("extract-text")
 	public ResponseEntity<String> getText(@RequestParam(name = "file") List<MultipartFile> multipartFileList){
 		
+		if(multipartFileList.isEmpty()) {
+			return ResponseEntity.badRequest().body("No files provided");
+		}
+		
 		for(MultipartFile multipartFile : multipartFileList) {
 			String extractedText = pdfExtractorService.extractText(multipartFile);
 
 			 if(extractedText.isEmpty()) {
-				return ResponseEntity.badRequest().body("No text extracted");
+				return ResponseEntity.badRequest().body("No text extracted in file: "+ multipartFile.getOriginalFilename());
 			}
 			
 			byte[] bytes = extractedText.getBytes();
@@ -51,11 +55,7 @@ public class PdfExtractorController {
 			
 			logger.log(Logger.Level.INFO, "PDF(s) extracted and sent to Kafka topic successfully");
 			
-			//return ResponseEntity.ok(pdfKafkaListener.consumePdfMessage(b64File));
-			
-			return ResponseEntity.ok("PDF(s) extracted and sent to Kafka topic successfully");
 		}
-		
-		return ResponseEntity.badRequest().body("No files provided");
+		return ResponseEntity.ok("PDF(s) extracted and sent to Kafka topic successfully");
 	}
 }
