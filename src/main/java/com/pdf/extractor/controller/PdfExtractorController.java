@@ -1,6 +1,7 @@
 package com.pdf.extractor.controller;
 
 import java.lang.System.Logger;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -33,6 +34,9 @@ public class PdfExtractorController {
 	@PostMapping("extract-text")
 	public ResponseEntity<String> getText(@RequestParam(name = "file") List<MultipartFile> multipartFileList){
 		
+		List<String> errors = new ArrayList<>();
+		List<String> success = new ArrayList<>();
+		
 		if(multipartFileList.isEmpty()) {
 			return ResponseEntity.badRequest().body("No files provided");
 		}
@@ -41,7 +45,9 @@ public class PdfExtractorController {
 			String extractedText = pdfExtractorService.extractText(multipartFile);
 
 			 if(extractedText.isEmpty()) {
-				return ResponseEntity.badRequest().body("No text extracted in file: "+ multipartFile.getOriginalFilename());
+				//ResponseEntity.badRequest().body("No text extracted in file: "+ multipartFile.getOriginalFilename());
+				errors.add("No text extracted in file: " + multipartFile.getOriginalFilename());
+				continue;
 			}
 			
 			byte[] bytes = extractedText.getBytes();
@@ -53,9 +59,20 @@ public class PdfExtractorController {
 			
 			pdfKafkaProducer.sendMessage("pdf-extractor-topic", jsonObject);
 			
+			success.add("File: " + multipartFile.getOriginalFilename() + " processed successfully");
 			logger.log(Logger.Level.INFO, "PDF(s) extracted and sent to Kafka topic successfully");
 			
 		}
-		return ResponseEntity.ok("PDF(s) extracted and sent to Kafka topic successfully");
+		String responseMessage = "FILES PROCESSED:\n";
+		
+		if(errors.size() > 0) {
+			responseMessage += "\nErrors:\n" + String.join(",\n", errors);
+		}
+		if(success.isEmpty()) {
+			return ResponseEntity.badRequest().body(responseMessage);
+		} else {
+			responseMessage += "\nSuccess:\n" + String.join(",\n", success);
+			return ResponseEntity.ok(responseMessage);
+		}
 	}
 }
