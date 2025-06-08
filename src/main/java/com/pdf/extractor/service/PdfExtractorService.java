@@ -17,9 +17,7 @@ public class PdfExtractorService {
 	
 	public String extractText(MultipartFile multipartFile) {
 		try {
-			URL urlFileTemp = PdfExtractorService.class.getClassLoader().getResource("file.tmp");
-			
-			File file = new File(urlFileTemp.toURI());
+			File file = File.createTempFile("temp", ".pdf");
 			
 			multipartFile.transferTo(file);
 			
@@ -38,10 +36,10 @@ public class PdfExtractorService {
 			for (int page = 0; page < document.getNumberOfPages(); ++page) {
                 BufferedImage image = renderer.renderImageWithDPI(page, 300);
                 String text = tess4j.doOCR(image);
-                //System.out.println("Page " + (page + 1) + " Text:\n" + text);
                 return text;
             }
             document.close();
+            file.delete();
 		} catch(Exception e) {
 			System.err.println(e.getMessage());
 			return "";

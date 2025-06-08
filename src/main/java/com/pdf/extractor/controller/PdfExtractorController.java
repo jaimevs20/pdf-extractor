@@ -63,7 +63,7 @@ public class PdfExtractorController {
 			logger.log(Logger.Level.INFO, "PDF(s) extracted and sent to Kafka topic successfully");
 			
 		}
-		String responseMessage = "FILES PROCESSED:\n";
+		String responseMessage = "FILES PROCESSED:\t";
 		
 		if(errors.size() > 0) {
 			responseMessage += "\nErrors:\n" + String.join(",\n", errors);
