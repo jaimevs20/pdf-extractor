@@ -31,3 +31,4 @@ replay_pid*
 .springBeans
 .sts4-cache
 .tmp
+.properties
