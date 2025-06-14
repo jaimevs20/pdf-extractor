@@ -45,8 +45,8 @@ public class PdfExtractorController {
 		JSONArray jsonError = new JSONArray();
 		
 		if(multipartFileList == null || multipartFileList.isEmpty()) {
-			 Map<String, String> errors = new HashMap<>();
-			 errors.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+			JSONObject errors = new JSONObject();
+			 errors.put("status", HttpStatus.BAD_REQUEST.value());
 			 errors.put("message", "No file provided");
 			 
 			return ResponseEntity.badRequest().body(errors);
@@ -56,9 +56,9 @@ public class PdfExtractorController {
 			String extractedText = pdfExtractorService.extractText(multipartFile);
 
 			 if(extractedText.isEmpty()) {
-				 Map<String, String> errors = new HashMap<>();
+				 JSONObject errors = new JSONObject();
 				 errors.put("file",  multipartFile.getOriginalFilename());
-				 errors.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+				 errors.put("status", HttpStatus.BAD_REQUEST.value());
 				 errors.put("message", "No text extracted in file");
 				 
 				 jsonError.add(errors);
@@ -73,10 +73,10 @@ public class PdfExtractorController {
 			jsonObject.put("encodedFirstPageText", b64File);
 			
 			pdfKafkaProducer.sendMessage("pdf-extractor-topic", jsonObject);
-			Map<String, String> success = new HashMap<>();
+			JSONObject success = new JSONObject();
 			
 			success.put("file", jsonObject.get("fileName").toString());
-			success.put("status", String.valueOf(HttpStatus.OK.value()));
+			success.put("status", HttpStatus.OK.value());
 			success.put("message", "processed successfully");
 
 			jsonSuccess.add(success);
