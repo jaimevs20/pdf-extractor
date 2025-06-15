@@ -2,9 +2,10 @@ package com.pdf.extractor.service;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.System.Logger;
 import java.net.URL;
-import java.util.List;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
@@ -14,8 +15,9 @@ import net.sourceforge.tess4j.Tesseract;
 
 @Service
 public class PdfExtractorService {
+	Logger logger = System.getLogger(PdfExtractorService.class.getName());
 	
-	public String extractText(MultipartFile multipartFile) {
+	public Map<Integer, String> extractText(MultipartFile multipartFile) {
 		try {
 			File file = File.createTempFile("temp", ".pdf");
 			
@@ -31,21 +33,23 @@ public class PdfExtractorService {
 			tess4j.setDatapath(tessdataDir.getAbsolutePath());
 			tess4j.setLanguage("por");
 			
-			System.out.println(multipartFile.getOriginalFilename());
+			logger.log(Logger.Level.INFO, "Processing "+ multipartFile.getOriginalFilename());
 			
-			for (int page = 0; page < document.getNumberOfPages(); ++page) {
+			Map<Integer, String> fullFile = new HashMap<>();
+			
+			for (int page = 0; page < document.getNumberOfPages(); page++) {
                 BufferedImage image = renderer.renderImageWithDPI(page, 300);
                 String text = tess4j.doOCR(image);
-                return text;
+                fullFile.put(page, text);
             }
-            document.close();
+			
+			document.close();
             file.delete();
+			return fullFile;
 		} catch(Exception e) {
-			System.err.println(e.getMessage());
-			return "";
+			logger.log(Logger.Level.ERROR, "An error has occurred ".concat(e.getMessage()));
+			return new HashMap<>();
 		}
-		
-		return "";
 	}
 	
 }

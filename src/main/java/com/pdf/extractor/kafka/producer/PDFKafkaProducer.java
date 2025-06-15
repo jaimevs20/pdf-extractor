@@ -19,6 +19,6 @@ public class PDFKafkaProducer {
 	public void sendMessage(String topic, JSONObject jsonB64Message) {
 		String b64Message = jsonB64Message.toJSONString();
 		kafkaTemplate.send(topic, b64Message);
-		logger.log(Level.INFO, "Message sent to topic " + topic + ": " + b64Message);
+		logger.log(Level.INFO, "Page sent to topic " + topic + ": " + b64Message);
 	}
 }
