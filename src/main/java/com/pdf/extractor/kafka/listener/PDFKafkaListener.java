@@ -41,7 +41,10 @@ public class PDFKafkaListener {
 		try {
 			String message = redisTemplate.opsForValue().get(fileName);
 
-			// Decode the b64 encoded message
+			if(message == null) {
+				return new String("");
+			}
+			
 			byte[] pdfBytes = Base64.getDecoder().decode(message);
 			
 			logger.log(Logger.Level.INFO, "PDF read successfully ".concat(message));

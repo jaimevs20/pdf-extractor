@@ -20,6 +20,8 @@ import com.pdf.extractor.kafka.listener.PDFKafkaListener;
 import com.pdf.extractor.kafka.producer.PDFKafkaProducer;
 import com.pdf.extractor.service.PdfExtractorService;
 
+import jakarta.websocket.server.PathParam;
+
 @RestController
 @RequestMapping("/api/pdf-extractor")
 public class PdfExtractorController {
@@ -67,8 +69,9 @@ public class PdfExtractorController {
 				
 				full.append(extractedForPage).append("\n");
 
-				logger.log(Logger.Level.INFO, "Page "+ extractedForPage.indexOf(extractedForPage) +" extracted and sent to Kafka topic successfully");
+				logger.log(Logger.Level.INFO, "Page "+ extractedForPage.indexOf(extractedForPage) +" extracted");
 			}
+			
 			String fullDoc = full.toString();
 			
 			byte[] bytes = fullDoc.getBytes(StandardCharsets.UTF_8);
@@ -78,6 +81,8 @@ public class PdfExtractorController {
 			jsonObject.put("encodedText", b64File);
 			
 			pdfKafkaProducer.sendMessage("pdf-extractor-topic", jsonObject);
+			
+			logger.log(Logger.Level.INFO, "File ".concat(file).concat(" sent to Kafka successfully"));
 			
 			JSONObject success = new JSONObject();
 			
@@ -109,10 +114,28 @@ public class PdfExtractorController {
 		
 		String response = pdfKafkaListener.getMessageText(fileName);
 		
-		if(response == null) {
+		if(response == null || response.isBlank()) {
 			return ResponseEntity.internalServerError().build();
 		}
-		return ResponseEntity.ok(pdfKafkaListener.getMessageText(fileName));
+		return ResponseEntity.ok(response);
 	}
 	
+	@GetMapping("get-word-from-file")
+	public ResponseEntity<Object> findWord(@RequestHeader String fileName, @PathParam("word") String word) {
+		JSONObject responseJson = new JSONObject();
+		
+		if(fileName == null || fileName.isBlank() || word == null || word.isBlank()) {
+			return ResponseEntity.badRequest().build();
+		}
+		
+		String response = pdfKafkaListener.getMessageText(fileName);
+		
+		if(response.isBlank()) {
+			return ResponseEntity.status(404).build();
+		} else if(response.toLowerCase().contains(word.toLowerCase())) {
+			return ResponseEntity.ok().build();
+		}
+		
+		return ResponseEntity.status(404).build();
+	}
 }
