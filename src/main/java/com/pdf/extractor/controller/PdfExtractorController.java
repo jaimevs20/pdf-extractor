@@ -2,7 +2,11 @@ package com.pdf.extractor.controller;
 
 import java.lang.System.Logger;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -90,6 +94,10 @@ public class PdfExtractorController {
 			success.put("status", HttpStatus.OK.value());
 			success.put("message", "processed successfully");
 
+			LocalDateTime date =  LocalDateTime.now();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
+			
+			success.put("processed_at", formatter.format(date));
 			jsonSuccess.add(success);
 		}
 		
@@ -112,7 +120,7 @@ public class PdfExtractorController {
 			return ResponseEntity.badRequest().build();	
 		}
 		
-		String response = pdfKafkaListener.getMessageText(fileName);
+		String response = pdfExtractorService.getMessageText(fileName);
 		
 		if(response == null || response.isBlank()) {
 			return ResponseEntity.internalServerError().build();
@@ -122,13 +130,12 @@ public class PdfExtractorController {
 	
 	@GetMapping("get-word-from-file")
 	public ResponseEntity<Object> findWord(@RequestHeader String fileName, @PathParam("word") String word) {
-		JSONObject responseJson = new JSONObject();
 		
 		if(fileName == null || fileName.isBlank() || word == null || word.isBlank()) {
 			return ResponseEntity.badRequest().build();
 		}
 		
-		String response = pdfKafkaListener.getMessageText(fileName);
+		String response = pdfExtractorService.getMessageText(fileName);
 		
 		if(response.isBlank()) {
 			return ResponseEntity.status(404).build();

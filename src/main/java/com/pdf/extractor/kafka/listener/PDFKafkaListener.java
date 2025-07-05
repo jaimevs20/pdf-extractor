@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
+import java.time.Duration;
 import java.util.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -28,7 +29,7 @@ public class PDFKafkaListener {
 			
 			String messageFromJson = jsonObject.get("encodedText").toString();
 
-			redisTemplate.opsForValue().set(jsonObject.get("fileName").toString(), messageFromJson);;
+			redisTemplate.opsForValue().set(jsonObject.get("fileName").toString(), messageFromJson, Duration.ofMinutes(20));
 			logger.log(Level.INFO, "Text saved in Redis");
 			
 		} catch (Exception e) {
@@ -36,26 +37,4 @@ public class PDFKafkaListener {
 		}
 		
 	}
-	
-	public String getMessageText(String fileName) {
-		try {
-			String message = redisTemplate.opsForValue().get(fileName);
-
-			if(message == null) {
-				return new String("");
-			}
-			
-			byte[] pdfBytes = Base64.getDecoder().decode(message);
-			
-			logger.log(Logger.Level.INFO, "PDF read successfully ".concat(message));
-			
-			return new String(pdfBytes, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			logger.log(Level.ERROR, e.getMessage());
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
-	
 }

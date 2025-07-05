@@ -33,3 +33,5 @@ replay_pid*
 .tmp
 .properties
 .pub
+/id_rsa.pub
+/id_rsa.pub.pub

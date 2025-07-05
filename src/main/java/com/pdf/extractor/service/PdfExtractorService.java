@@ -2,12 +2,17 @@ package com.pdf.extractor.service;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.net.URL;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +21,9 @@ import net.sourceforge.tess4j.Tesseract;
 @Service
 public class PdfExtractorService {
 	Logger logger = System.getLogger(PdfExtractorService.class.getName());
+	
+	@Autowired
+	private StringRedisTemplate redisTemplate;
 	
 	public Map<Integer, String> extractText(MultipartFile multipartFile) {
 		try {
@@ -49,6 +57,26 @@ public class PdfExtractorService {
 		} catch(Exception e) {
 			logger.log(Logger.Level.ERROR, "An error has occurred ".concat(e.getMessage()));
 			return new HashMap<>();
+		}
+	}
+	
+	public String getMessageText(String fileName) {
+		try {
+			String message = redisTemplate.opsForValue().get(fileName);
+
+			if(message == null) {
+				return new String("");
+			}
+			
+			byte[] pdfBytes = Base64.getDecoder().decode(message);
+			
+			logger.log(Logger.Level.INFO, "PDF read successfully ".concat(message));
+			
+			return new String(pdfBytes, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			logger.log(Level.ERROR, e.getMessage());
+			e.printStackTrace();
+			return null;
 		}
 	}
 	
