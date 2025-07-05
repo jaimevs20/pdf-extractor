@@ -1,5 +1,6 @@
 package com.pdf.extractor.controller;
 
+import java.io.IOException;
 import java.lang.System.Logger;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -40,8 +41,8 @@ public class PdfExtractorController {
 	Logger logger = System.getLogger(PdfExtractorController.class.getName());
 	
 	@SuppressWarnings("unchecked")
-	@PostMapping("extract-text")
-	public ResponseEntity<Object> getText(@RequestParam(name = "file", required = false) List<MultipartFile> multipartFileList){
+	@PostMapping("upload")
+	public ResponseEntity<Object> uploadDoc(@RequestParam(name = "file", required = false) List<MultipartFile> multipartFileList){
 		
 		JSONArray jsonSuccess = new JSONArray();
 		JSONArray jsonError = new JSONArray();
@@ -55,50 +56,50 @@ public class PdfExtractorController {
 		}
 		
 		for(MultipartFile multipartFile : multipartFileList) {
-			String file = multipartFile.getOriginalFilename();
-			JSONObject jsonObject = new JSONObject();
-			StringBuilder full = new StringBuilder();
 			
-			for(String extractedForPage : pdfExtractorService.extractText(multipartFile).values()) {
+			if(multipartFile.getSize() > 100000) {
+				JSONObject errors = new JSONObject();
+				errors.put("fileName", multipartFile.getOriginalFilename());
+				errors.put("status", HttpStatus.BAD_REQUEST.value());
+				errors.put("message", "file is too large");
+				jsonError.add(errors);
 				
-				 if(extractedForPage.isEmpty()) {
-					 JSONObject errors = new JSONObject();
-					 errors.put("file",  multipartFile.getOriginalFilename());
-					 errors.put("status", HttpStatus.BAD_REQUEST.value());
-					 errors.put("message", "No text extracted in file");
-					 
-					 jsonError.add(errors);
-					 continue;
-				}
-				
-				full.append(extractedForPage).append("\n");
-
-				logger.log(Logger.Level.INFO, "Page "+ extractedForPage.indexOf(extractedForPage) +" extracted");
+				continue;
 			}
 			
-			String fullDoc = full.toString();
+			String file = multipartFile.getOriginalFilename();
+			JSONObject jsonObject = new JSONObject();
 			
-			byte[] bytes = fullDoc.getBytes(StandardCharsets.UTF_8);
-			String b64File = Base64.getEncoder().encodeToString(bytes);
-			
-			jsonObject.put("fileName", multipartFile.getOriginalFilename());
-			jsonObject.put("encodedText", b64File);
-			
-			pdfKafkaProducer.sendMessage("pdf-extractor-topic", jsonObject);
-			
-			logger.log(Logger.Level.INFO, "File ".concat(file).concat(" sent to Kafka successfully"));
-			
-			JSONObject success = new JSONObject();
-			
-			success.put("file", file);
-			success.put("status", HttpStatus.OK.value());
-			success.put("message", "processed successfully");
-
-			LocalDateTime date =  LocalDateTime.now();
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
-			
-			success.put("processed_at", formatter.format(date));
-			jsonSuccess.add(success);
+			try {
+				byte[] bytes = multipartFile.getBytes();
+				String b64File = Base64.getEncoder().encodeToString(bytes);
+				
+				jsonObject.put("fileName", multipartFile.getOriginalFilename());
+				jsonObject.put("rawText", b64File);
+				
+				pdfKafkaProducer.sendMessage("pdf-save-raw-topic", jsonObject);
+				
+				logger.log(Logger.Level.INFO, "File ".concat(file).concat(" sent to Kafka (pdf-save-raw-topic) successfully"));
+				
+				JSONObject success = new JSONObject();
+				
+				success.put("file", file);
+				success.put("status", HttpStatus.OK.value());
+				success.put("message", "processed successfully");
+	
+				LocalDateTime date =  LocalDateTime.now();
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
+				
+				success.put("processed_at", formatter.format(date));
+				jsonSuccess.add(success);
+			} catch(IOException e) {
+				 JSONObject errors = new JSONObject();
+				 errors.put("file",  multipartFile.getOriginalFilename());
+				 errors.put("status", HttpStatus.BAD_REQUEST.value());
+				 errors.put("message", e.getMessage());
+				 
+				 jsonError.add(errors);
+			}
 		}
 		
 		if(jsonSuccess.isEmpty() && jsonError.isEmpty()) {
