@@ -32,3 +32,4 @@ replay_pid*
 .sts4-cache
 .tmp
 .properties
+.pub
