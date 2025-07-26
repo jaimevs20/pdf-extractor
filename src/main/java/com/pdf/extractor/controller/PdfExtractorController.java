@@ -102,7 +102,9 @@ public class PdfExtractorController {
 			}
 		}
 		
-		if(jsonSuccess.isEmpty() && jsonError.isEmpty()) {
+		if(jsonSuccess.isEmpty() && !jsonError.isEmpty()) {
+			return ResponseEntity.badRequest().build();
+		} else if(jsonSuccess.isEmpty() && jsonError.isEmpty()) {
 			return ResponseEntity.internalServerError().build();
 		}
 
