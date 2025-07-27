@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: pdf-extractor-api
+    env: docker
+    plan: free
+    repo: https://github.com/jaimevs20/pdf-extractor
+    dockerfilePath: ./Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    branch: main
+    autoDeploy: true
