@@ -24,8 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.pdf.extractor.kafka.listener.PDFKafkaListener;
 import com.pdf.extractor.kafka.producer.PDFKafkaProducer;
 import com.pdf.extractor.service.PdfExtractorService;
-
 import jakarta.websocket.server.PathParam;
+
 
 @RestController
 @RequestMapping("/pdf-extractor")
@@ -39,6 +39,11 @@ public class PdfExtractorController {
 	PDFKafkaListener pdfKafkaListener;
 	
 	Logger logger = System.getLogger(PdfExtractorController.class.getName());
+	
+	@GetMapping("test")
+	public ResponseEntity<String> getTest(){
+		return ResponseEntity.ok().build();
+	}
 	
 	@SuppressWarnings("unchecked")
 	@PostMapping("upload")
