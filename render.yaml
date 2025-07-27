@@ -4,7 +4,7 @@ services:
     env: docker
     plan: free
     repo: https://github.com/jaimevs20/pdf-extractor
-    dockerfilePath: ./Dockerfile
+    dockerComposePath: ./docker-compose.yml
     buildCommand: ""
     startCommand: ""
     branch: main
