@@ -126,7 +126,7 @@ public class PdfExtractorController {
 		String response = pdfExtractorService.getMessageText(fileName);
 		
 		if(response == null || response.isBlank()) {
-			return ResponseEntity.internalServerError().build();
+			return ResponseEntity.notFound().build();
 		}
 		return ResponseEntity.ok(response);
 	}
@@ -142,7 +142,8 @@ public class PdfExtractorController {
 		
 		if(response.isBlank()) {
 			return ResponseEntity.status(404).build();
-		} else if(response.toLowerCase().contains(word.toLowerCase())) {
+		} else if(response.toLowerCase().contains(word.toLowerCase())
+				|| response.replaceAll("[^a-zA-Z0-9]", "").contains(word)) {
 			return ResponseEntity.ok().build();
 		}
 		

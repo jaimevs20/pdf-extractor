@@ -35,6 +35,3 @@ replay_pid*
 .pub
 /id_rsa.pub
 /id_rsa.pub.pub
-
-*.yml
-*.properties
