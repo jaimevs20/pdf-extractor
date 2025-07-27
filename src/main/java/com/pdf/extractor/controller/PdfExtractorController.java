@@ -28,7 +28,7 @@ import com.pdf.extractor.service.PdfExtractorService;
 import jakarta.websocket.server.PathParam;
 
 @RestController
-@RequestMapping("/api/pdf-extractor")
+@RequestMapping("/pdf-extractor")
 public class PdfExtractorController {
 
 	@Autowired
