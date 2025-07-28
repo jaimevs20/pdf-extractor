@@ -41,7 +41,7 @@ public class PDFKafkaListener {
 			
 			String messageFromJson = jsonObject.get("encodedText").toString();
 
-			redisTemplate.opsForValue().set(jsonObject.get("fileName").toString(), messageFromJson, Duration.ofMinutes(20));
+			redisTemplate.opsForValue().set(jsonObject.get("fileName").toString(), messageFromJson, Duration.ofDays(1));
 			logger.log(Level.INFO, "Text saved in Redis");
 			
 		} catch (Exception e) {
