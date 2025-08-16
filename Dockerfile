@@ -15,6 +15,11 @@ RUN apt-get update && apt-get install -y stunnel4 && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/stunnel
 # Copia o arquivo de configuração do stunnel
 COPY stunnel.conf /etc/stunnel/stunnel.conf
+# Copia o JAR da aplicação
+COPY --from=builder /app/target/*.jar app.jar
+# Copia o script de startup
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
